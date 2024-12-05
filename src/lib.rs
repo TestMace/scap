@@ -7,6 +7,9 @@ mod utils;
 
 // Helper Methods
 pub use targets::get_all_targets;
+pub use targets::get_target_dimensions;
+pub use targets::get_main_display;
+pub use targets::get_scale_factor;
 pub use targets::Target;
 pub use utils::has_permission;
 pub use utils::is_supported;
