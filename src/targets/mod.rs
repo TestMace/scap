@@ -39,6 +39,7 @@ pub enum Target {
 
 /// Returns a list of targets that can be captured
 pub fn get_all_targets() -> Vec<Target> {
+    println!("get_all_targets");
     #[cfg(target_os = "macos")]
     return mac::get_all_targets();
 

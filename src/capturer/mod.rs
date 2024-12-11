@@ -130,6 +130,7 @@ impl Capturer {
     // Prevent starting capture if already started
     /// Start capturing the frames
     pub fn start_capture(&mut self) {
+        println!("!!! Starting capture");
         self.engine.start();
     }
 

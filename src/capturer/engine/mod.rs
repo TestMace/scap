@@ -90,7 +90,9 @@ impl Engine {
         #[cfg(target_os = "macos")]
         {
             // self.mac.add_output(Capturer::new(tx));
+            println!("Starting capture");
             self.mac.start_capture().expect("Failed to start capture");
+            println!("Capture started");
         }
 
         #[cfg(target_os = "windows")]

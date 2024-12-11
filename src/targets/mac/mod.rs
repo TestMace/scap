@@ -1,6 +1,6 @@
 use cocoa::appkit::{NSApp, NSScreen};
 use cocoa::base::{id, nil};
-use cocoa::foundation::{NSRect, NSString, NSUInteger};
+use cocoa::foundation::{NSInteger, NSRect, NSString, NSUInteger};
 use core_graphics_helmer_fork::display::{CGDirectDisplayID, CGDisplay, CGMainDisplayID};
 use core_graphics_helmer_fork::window::CGWindowID;
 use objc::{msg_send, sel, sel_impl};
@@ -86,11 +86,12 @@ pub fn get_main_display() -> Display {
 pub fn get_scale_factor(target: &Target) -> f64 {
     match target {
         Target::Window(window) => unsafe {
-            let cg_win_id = window.raw_handle;
-            let ns_app: id = NSApp();
-            let ns_window: id = msg_send![ns_app, windowWithWindowNumber: cg_win_id as NSUInteger];
-            let scale_factor: f64 = msg_send![ns_window, backingScaleFactor];
-            scale_factor
+            // let cg_win_id = window.raw_handle;
+            // let ns_app: id = NSApp();
+            // let ns_window: id = msg_send![ns_app, windowWithWindowNumber: cg_win_id as NSInteger];
+            // let scale_factor: f64 = msg_send![ns_window, backingScaleFactor];
+            // scale_factor
+            2.0
         },
         Target::Display(display) => {
             let mode = display.raw_handle.display_mode().unwrap();
@@ -102,11 +103,13 @@ pub fn get_scale_factor(target: &Target) -> f64 {
 pub fn get_target_dimensions(target: &Target) -> (u64, u64) {
     match target {
         Target::Window(window) => unsafe {
-            let cg_win_id = window.raw_handle;
-            let ns_app: id = NSApp();
-            let ns_window: id = msg_send![ns_app, windowWithWindowNumber: cg_win_id as NSUInteger];
-            let frame: NSRect = msg_send![ns_window, frame];
-            (frame.size.width as u64, frame.size.height as u64)
+            let sc_shareable_content = SCShareableContent::current();
+            let sc_window = sc_shareable_content
+                .windows
+                .into_iter()
+                .find(|sc_win| sc_win.window_id == window.id)
+                .unwrap();
+            (sc_window.width as u64, sc_window.height as u64)
         },
         Target::Display(display) => {
             let mode = display.raw_handle.display_mode().unwrap();

@@ -3,8 +3,8 @@
 
 use scap::{
     capturer::{Area, Capturer, Options, Point, Size},
-    frame::Frame
-    ,
+    frame::Frame,
+    Target::Window as ScapWindow,
 };
 use std::process;
 
@@ -25,6 +25,18 @@ fn main() {
         }
     }
 
+    println!("✅ Permission granted");
+
+    let targets = scap::get_all_targets();
+    let target = targets
+        .iter()
+        .find(|t| match t {
+            ScapWindow(window) => {
+                return window.title.ends_with("scap");
+            }
+            _ => false,
+        })
+        .cloned();
     // // Get recording targets
     // let targets = scap::get_all_targets();
 
@@ -35,14 +47,8 @@ fn main() {
         show_highlight: true,
         excluded_targets: None,
         output_type: scap::frame::FrameType::BGRAFrame,
-        output_resolution: scap::capturer::Resolution::_720p,
-        crop_area: Some(Area {
-            origin: Point { x: 0.0, y: 0.0 },
-            size: Size {
-                width: 500.0,
-                height: 500.0,
-            },
-        }),
+        target: target,
+        output_resolution: scap::capturer::Resolution::Captured,
         ..Default::default()
     };
 
@@ -52,6 +58,7 @@ fn main() {
         process::exit(1);
     });
 
+    println!("✅ Capturer created");
     // Start Capture
     recorder.start_capture();
 
@@ -108,11 +115,12 @@ fn main() {
                     start_time = frame.display_time;
                 }
                 println!(
-                    "Recieved BGRA frame {} of width {} and height {} and time {}",
+                    "Recieved BGRA frame {} of width {} and height {} and time {} {}",
                     i,
                     frame.width,
                     frame.height,
-                    frame.display_time - start_time
+                    frame.display_time - start_time,
+                    frame.data.len()
                 );
             }
         }

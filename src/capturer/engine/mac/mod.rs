@@ -141,6 +141,7 @@ pub fn create_capturer(
     };
 
     let [width, height] = get_output_frame_size(options);
+    println!("width: {}, height: {}", width, height);
 
     let stream_config = SCStreamConfiguration {
         width,
@@ -169,20 +170,40 @@ pub fn get_output_frame_size(options: &Options) -> [u32; 2] {
         .clone()
         .unwrap_or_else(|| Target::Display(targets::get_main_display()));
 
-    let scale_factor = targets::get_scale_factor(&target);
-    let source_rect = get_crop_area(options);
+    let (mut output_width, mut output_height, source_width, source_height) = match target {
+        Target::Display(_) => {
+            let scale_factor = targets::get_scale_factor(&target);
+            let source_rect = get_crop_area(options);
+            (
+                (source_rect.size.width as u32) * (scale_factor as u32),
+                (source_rect.size.height as u32) * (scale_factor as u32),
+                source_rect.size.width as u32,
+                source_rect.size.height as u32,
+            )
+        }
+        Target::Window(window) => {
+            let sc_shareable_content = SCShareableContent::current();
+            let sc_window = sc_shareable_content
+                .windows
+                .into_iter()
+                .find(|sc_win| sc_win.window_id == window.id)
+                .unwrap();
+            (
+                (sc_window.width * 2) as u32,
+                (sc_window.height * 2) as u32,
+                sc_window.width,
+                sc_window.height,
+            )
+        }
+    };
 
-    // Calculate the output height & width based on the required resolution
-    // Output width and height need to be multiplied by scale (or dpi)
-    let mut output_width = (source_rect.size.width as u32) * (scale_factor as u32);
-    let mut output_height = (source_rect.size.height as u32) * (scale_factor as u32);
     // 1200x800
     match options.output_resolution {
         Resolution::Captured => {}
         _ => {
             let [resolved_width, resolved_height] = options
                 .output_resolution
-                .value((source_rect.size.width as f32) / (source_rect.size.height as f32));
+                .value((source_width as f32) / (source_height as f32));
             // 1280 x 853
             output_width = cmp::min(output_width, resolved_width);
             output_height = cmp::min(output_height, resolved_height);
@@ -191,6 +212,10 @@ pub fn get_output_frame_size(options: &Options) -> [u32; 2] {
 
     output_width -= output_width % 2;
     output_height -= output_height % 2;
+    println!(
+        "output_width: {}, output_height: {}",
+        output_width, output_height
+    );
 
     [output_width, output_height]
 }
@@ -202,6 +227,7 @@ pub fn get_crop_area(options: &Options) -> Area {
         .unwrap_or_else(|| Target::Display(targets::get_main_display()));
 
     let (width, height) = targets::get_target_dimensions(&target);
+    println!("get_crop_area width: {}, height: {}", width, height);
 
     options
         .crop_area
