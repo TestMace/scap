@@ -89,6 +89,14 @@ pub fn get_scale_factor(target: &Target) -> f64 {
             let cg_win_id = window.raw_handle;
             let ns_app: id = NSApp();
             let ns_window: id = msg_send![ns_app, windowWithWindowNumber: cg_win_id as NSUInteger];
+            if ns_window == nil {
+                let main_screen: id = NSScreen::mainScreen(nil);
+                if main_screen == nil {
+                    return 2.0;
+                }
+                let sf: f64 = msg_send![main_screen, backingScaleFactor];
+                return sf;
+            }
             let scale_factor: f64 = msg_send![ns_window, backingScaleFactor];
             scale_factor
         },
@@ -105,6 +113,9 @@ pub fn get_target_dimensions(target: &Target) -> (u64, u64) {
             let cg_win_id = window.raw_handle;
             let ns_app: id = NSApp();
             let ns_window: id = msg_send![ns_app, windowWithWindowNumber: cg_win_id as NSUInteger];
+            if ns_window == nil {
+                return (1920, 1080);
+            }
             let frame: NSRect = msg_send![ns_window, frame];
             (frame.size.width as u64, frame.size.height as u64)
         },
